@@ -1,0 +1,32 @@
+# --- FRONTEND ---
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+
+# --- BACKEND ---
+backend/node_modules/
+backend/.env
+backend/.env.local
+backend/dist/
+backend/vendor/
+
+# --- GLOBAL ---
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Env files (general safety)
+*.env
+*.env.*
+!backend/.env        # Autoriser uniquement le .env du backend si tu veux l'inclure
