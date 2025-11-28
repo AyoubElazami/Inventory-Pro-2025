@@ -36,7 +36,6 @@ jobs:
           cp -r .next deploy/.next
           cp -r public deploy/public
           cp package.json deploy/package.json
-          cp next.config.js deploy/next.config.js || echo "next.config.js not found"
 
       - name: Zip deployment
         working-directory: ./frontend
@@ -46,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-package
-          path: ./frontend.zip
+          path: ./frontend/frontend.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -60,7 +59,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-package
-          path: .
+          path: ./frontend-deploy
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -77,4 +76,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Inventory-pro-front'
-          package: ./frontend.zip
+          package: ./frontend-deploy/frontend.zip
