@@ -51,10 +51,14 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_BACK_CLIENTID }}
-          tenant-id: ${{ secrets.AZURE_BACK_TENANTID }}
-          subscription-id: ${{ secrets.AZURE_BACK_SUBSCRIPTION }}
-          client-secret: ${{ secrets.AZURE_BACK_CLIENTSECRET }}
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_BACK_CLIENTID }}",
+              "clientSecret": "${{ secrets.AZURE_BACK_CLIENTSECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_BACK_SUBSCRIPTION }}",
+              "tenantId": "${{ secrets.AZURE_BACK_TENANTID }}"
+            }
+
 
       - name: Deploy to Azure Web App (Backend)
         uses: azure/webapps-deploy@v3
@@ -62,3 +66,4 @@ jobs:
           app-name: 'Inventory-pro-back'
           slot-name: 'Production'
           package: ./backend
+
