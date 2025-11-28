@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read # This is required for actions/checkout
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -54,10 +54,10 @@ jobs:
           client-id: ${{ secrets.AZURE_BACK_CLIENTID }}
           tenant-id: ${{ secrets.AZURE_BACK_TENANTID }}
           subscription-id: ${{ secrets.AZURE_BACK_SUBSCRIPTION }}
+          client-secret: ${{ secrets.AZURE_BACK_CLIENTSECRET }}
 
       - name: Deploy to Azure Web App (Backend)
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
           app-name: 'Inventory-pro-back'
           slot-name: 'Production'
