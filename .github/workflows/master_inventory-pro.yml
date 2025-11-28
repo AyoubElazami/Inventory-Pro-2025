@@ -1,4 +1,4 @@
-name: Build and deploy Backend Node.js app to Azure Web App - Inventory-pro
+name: Build and deploy Backend Node.js app to Azure Web App - Inventory-pro-back
 
 on:
   push:
@@ -8,55 +8,60 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    permissions:
+      contents: read
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22.x'
 
-      - name: Install dependencies
+      - name: Install dependencies (Backend)
         working-directory: ./backend
         run: npm install
 
-      - name: Zip artifact for deployment
-        run: |
-          cd backend
-          zip -r ../backend.zip .
+      - name: Build Backend (if applicable)
+        working-directory: ./backend
+        run: npm run build --if-present
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v4
         with:
-          name: backend-artifact
-          path: backend.zip
+          name: backend-app
+          path: ./backend
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: production
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v3
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
         with:
-          name: backend-artifact
+          name: backend-app
+          path: .
 
-      - name: Azure Login
+      - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID_BACK }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID_BACK }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          auth-type: SERVICE_PRINCIPAL
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET_BACK }}
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_BACK_CLIENTID }}",
+              "clientSecret": "${{ secrets.AZURE_BACK_CLIENTSECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_BACK_SUBSCRIPTION }}",
+              "tenantId": "${{ secrets.AZURE_BACK_TENANTID }}"
+            }
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Azure Web App (Backend)
         uses: azure/webapps-deploy@v3
         with:
-          app-name: Inventory-pro   # ✔️ le bon nom de ton App Service
-          package: backend.zip
+          app-name: 'Inventory-pro-back'
+          package: .
