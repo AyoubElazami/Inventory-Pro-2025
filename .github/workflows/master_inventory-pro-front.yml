@@ -36,10 +36,11 @@ jobs:
           cp -r .next deploy/.next
           cp -r public deploy/public
           cp package.json deploy/package.json
+          cp next.config.js deploy/next.config.js || echo "next.config.js not found"
 
       - name: Zip deployment
-        working-directory: ./frontend/deploy
-        run: zip -r ../../frontend.zip .
+        working-directory: ./frontend
+        run: zip -r frontend.zip deploy
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
