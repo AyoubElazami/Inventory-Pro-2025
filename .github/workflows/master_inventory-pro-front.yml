@@ -37,7 +37,7 @@ jobs:
           cp -r public deploy/public
           cp package.json deploy/package.json
 
-      - name: Zip deployment
+      - name: Zip deployment package
         working-directory: ./frontend
         run: zip -r frontend.zip deploy
 
