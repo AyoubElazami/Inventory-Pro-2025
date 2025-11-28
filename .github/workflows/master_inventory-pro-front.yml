@@ -33,7 +33,9 @@ jobs:
         working-directory: ./frontend
         run: |
           mkdir deploy-package
-          cp -Recurse .next package.json public . deploy-package
+          Copy-Item -Path .next -Destination deploy-package -Recurse
+          Copy-Item -Path package.json -Destination deploy-package
+          Copy-Item -Path public -Destination deploy-package -Recurse
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
