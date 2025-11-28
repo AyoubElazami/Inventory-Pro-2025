@@ -63,5 +63,6 @@ jobs:
       - name: Deploy to Azure Web App (Backend)
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'Inventory-pro-back'
+          app-name: 'Inventory-pro'
           package: .
+
