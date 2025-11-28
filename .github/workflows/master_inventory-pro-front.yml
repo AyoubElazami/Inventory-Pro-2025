@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read # This is required for actions/checkout
+      contents: read # required for actions/checkout
 
     steps:
       - name: Checkout repository
@@ -25,7 +25,7 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
-      - name: Build Frontend (Next.js)
+      - name: Build Frontend
         working-directory: ./frontend
         run: npm run build
 
@@ -51,9 +51,13 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_FRONT_CLIENTID }}
-          tenant-id: ${{ secrets.AZURE_FRONT_TENANTID }}
-          subscription-id: ${{ secrets.AZURE_FRONT_SUBSCRIPTION }}
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_FRONT_CLIENTID }}",
+              "clientSecret": "${{ secrets.AZURE_FRONT_CLIENTSECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_FRONT_SUBSCRIPTION }}",
+              "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
+            }
 
       - name: Deploy to Azure Web App (Frontend)
         uses: azure/webapps-deploy@v3
