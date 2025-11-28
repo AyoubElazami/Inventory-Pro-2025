@@ -8,9 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
-    permissions:
-      contents: read
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -19,7 +17,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22.x'
+          node-version: "22.x"
 
       - name: Install dependencies
         working-directory: ./frontend
@@ -29,17 +27,16 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      - name: Prepare deployment package
+      - name: Prepare Deployment Folder
         working-directory: ./frontend
-        shell: pwsh
         run: |
           mkdir deploy-package
-          Copy-Item -Path .next -Destination deploy-package -Recurse
-          Copy-Item -Path package.json -Destination deploy-package
-          Copy-Item -Path public -Destination deploy-package -Recurse
-          Copy-Item -Path node_modules -Destination deploy-package -Recurse
+          cp -R .next deploy-package/.next
+          cp -R public deploy-package/public
+          cp package.json deploy-package/package.json
+          cp next.config.* deploy-package/ 2>/dev/null || true
 
-      - name: Upload artifact for deployment
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-app
@@ -53,13 +50,13 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-app
           path: ./deploy-package
 
-      - name: Login to Azure
+      - name: Azure Login
         uses: azure/login@v2
         with:
           creds: |
@@ -70,8 +67,8 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      - name: Deploy to Azure Web App (Frontend)
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'Inventory-pro-front'
-          package: ./deploy-package
+          app-name: "Inventory-pro-front"
+          package: "./deploy-package"
