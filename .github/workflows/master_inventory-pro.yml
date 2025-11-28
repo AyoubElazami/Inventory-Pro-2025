@@ -47,7 +47,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-app
-          path: .
+          path: ./deploy-package
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -64,5 +64,5 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Inventory-pro'
-          package: .
-
+          slot-name: 'Production'
+          package: ./deploy-package
