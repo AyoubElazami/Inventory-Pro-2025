@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read # required for actions/checkout
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -27,9 +27,9 @@ jobs:
 
       - name: Build Frontend
         working-directory: ./frontend
-        run: npm run build
+        run: npm run build --if-present
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: frontend-app
@@ -47,6 +47,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-app
+          path: .
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -61,8 +62,6 @@ jobs:
 
       - name: Deploy to Azure Web App (Frontend)
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
           app-name: 'Inventory-pro-front'
-          slot-name: 'Production'
-          package: ./frontend
+          package: .
