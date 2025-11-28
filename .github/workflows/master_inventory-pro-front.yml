@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read # required for actions/checkout
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -33,10 +33,14 @@ jobs:
         working-directory: ./frontend
         run: |
           mkdir deploy-package
-          Copy-Item -Path .next -Destination deploy-package -Recurse
-          Copy-Item -Path package.json -Destination deploy-package
-          Copy-Item -Path next.config.js -Destination deploy-package
-          Copy-Item -Path public -Destination deploy-package -Recurse
+          # Copier .next
+          if (Test-Path .next) { Copy-Item -Path .next -Destination deploy-package -Recurse }
+          # Copier package.json
+          if (Test-Path package.json) { Copy-Item -Path package.json -Destination deploy-package }
+          # Copier next.config.js si existe
+          if (Test-Path next.config.js) { Copy-Item -Path next.config.js -Destination deploy-package }
+          # Copier public
+          if (Test-Path public) { Copy-Item -Path public -Destination deploy-package -Recurse }
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
