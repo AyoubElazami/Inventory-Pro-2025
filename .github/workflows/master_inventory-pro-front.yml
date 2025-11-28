@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: Install dependencies (Frontend)
+      - name: Install dependencies
         working-directory: ./frontend
         run: npm install
 
@@ -29,18 +29,11 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      - name: Prepare artifact for deployment
+      - name: Prepare deployment package
         working-directory: ./frontend
         run: |
           mkdir deploy-package
-          # Copier .next
-          if (Test-Path .next) { Copy-Item -Path .next -Destination deploy-package -Recurse }
-          # Copier package.json
-          if (Test-Path package.json) { Copy-Item -Path package.json -Destination deploy-package }
-          # Copier next.config.js si existe
-          if (Test-Path next.config.js) { Copy-Item -Path next.config.js -Destination deploy-package }
-          # Copier public
-          if (Test-Path public) { Copy-Item -Path public -Destination deploy-package -Recurse }
+          cp -Recurse .next package.json public . deploy-package
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
@@ -60,7 +53,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-app
-          path: .
+          path: ./deploy-package
 
       - name: Login to Azure
         uses: azure/login@v2
