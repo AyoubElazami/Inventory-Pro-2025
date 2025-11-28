@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read # requis pour actions/checkout
+      contents: read # required for actions/checkout
 
     steps:
       - name: Checkout repository
@@ -23,17 +23,20 @@ jobs:
 
       - name: Install dependencies (Frontend)
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
-      - name: Build Next.js Frontend
+      - name: Build Frontend
         working-directory: ./frontend
         run: npm run build
 
       - name: Prepare artifact for deployment
         working-directory: ./frontend
         run: |
-          mkdir -p ./deploy-package
-          cp -r .next package.json public next.config.js ./deploy-package
+          mkdir deploy-package
+          Copy-Item -Path .next -Destination deploy-package -Recurse
+          Copy-Item -Path package.json -Destination deploy-package
+          Copy-Item -Path next.config.js -Destination deploy-package
+          Copy-Item -Path public -Destination deploy-package -Recurse
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
@@ -53,7 +56,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-app
-          path: ./frontend/deploy-package
+          path: .
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -70,4 +73,5 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Inventory-pro-front'
-          package: ./frontend/deploy-package
+          slot-name: 'Production'
+          package: ./deploy-package
