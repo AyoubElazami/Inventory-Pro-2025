@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: '22.x'
 
-      # 3️⃣ Installer les dépendances et builder
+      # 3️⃣ Installer dépendances et builder
       - name: Install dependencies and build
         working-directory: ./frontend
         run: |
@@ -44,15 +44,21 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      # 5️⃣ Déploiement direct avec Azure CLI
-      - name: Deploy project via Azure CLI
+      # 5️⃣ Préparer le zip minimal pour le déploiement
+      - name: Prepare minimal deployment zip
         run: |
-          az webapp up \
-            --name Inventory-pro-front \
-            --resource-group InventoryProRG \
-            --location switzerlandnorth \
-            --sku F1 \
-            --plan InventoryProPlan \
-            --src-path ./frontend
+          mkdir deploy
+          cp -r ./frontend/package.json ./frontend/package-lock.json deploy/
+          cp -r ./frontend/app deploy/      # ou ./frontend/pages si tu utilises pages/
+          cp -r ./frontend/public deploy/
+          # Copier next.config.js seulement si présent
+          [ -f ./frontend/next.config.js ] && cp ./frontend/next.config.js deploy/ || echo "No next.config.js, skipping"
+          # Créer le zip minimal
+          zip -r deploy.zip deploy
 
-
+      # 6️⃣ Déploiement via ZIP Deploy
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'Inventory-pro-front'          # Nom de ton Web App
+          package: ./deploy.zip
