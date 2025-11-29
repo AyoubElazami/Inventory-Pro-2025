@@ -12,25 +12,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
-      - name: Install and Build Next.js
+      - name: Install deps + build
         working-directory: ./frontend
         run: |
-          npm install
+          npm ci
           npm run build
 
-      - name: Prepare deploy package
+      - name: Prepare deploy zip (SSR)
         working-directory: ./frontend
         run: |
           mkdir deploy
+          cp package.json package-lock.json deploy/
           cp -r .next deploy/.next
           cp -r public deploy/public
-          cp package.json deploy/
-          cp package-lock.json deploy/
+          cp -r app deploy/app || cp -r pages deploy/pages
           [ -f next.config.js ] && cp next.config.js deploy/
           zip -r deploy.zip deploy
 
