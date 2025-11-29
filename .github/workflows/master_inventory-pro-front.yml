@@ -1,4 +1,4 @@
-name: Build and deploy Frontend Next.js app to Azure Web App - Inventory-pro-front
+name: Build and Deploy Next.js App to Azure Web App
 
 on:
   push:
@@ -6,61 +6,33 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
+      # 1️⃣ Récupérer le code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Installer Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm install
-
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      - name: Prepare deployment folder
+      # 3️⃣ Installer les dépendances et build Next.js
+      - name: Install dependencies and build
         working-directory: ./frontend
         run: |
-          mkdir deploy
-          cp -r .next deploy/.next
-          cp -r public deploy/public
-          cp package.json deploy/package.json
+          npm install
+          npm run build
 
-      - name: Zip deployment package
-        working-directory: ./frontend
-        run: zip -r frontend.zip deploy
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-package
-          path: ./frontend/frontend.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-package
-          path: ./frontend-deploy
-
+      # 4️⃣ Connexion à Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -72,8 +44,9 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
+      # 5️⃣ Déploiement sur Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Inventory-pro-front'
-          package: ./frontend-deploy/frontend.zip
+          package: ./frontend
