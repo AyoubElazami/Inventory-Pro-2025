@@ -77,3 +77,9 @@ jobs:
         with:
           app-name: 'Inventory-pro-front'
           package: ./frontend-deploy/frontend.zip
+
+
+
+
+
+          
