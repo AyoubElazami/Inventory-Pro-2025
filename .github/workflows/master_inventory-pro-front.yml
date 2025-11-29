@@ -1,4 +1,4 @@
-name: Build and Deploy Next.js App to Azure Web App
+name: Deploy Next.js SSR to Azure Web App
 
 on:
   push:
@@ -15,24 +15,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Récupérer le code
+      # 1️⃣ Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Installer Node.js
+      # 2️⃣ Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
-      # 3️⃣ Installer dépendances et builder
+      # 3️⃣ Install dependencies and build
       - name: Install dependencies and build
         working-directory: ./frontend
         run: |
           npm install
           npm run build
 
-      # 4️⃣ Connexion à Azure
+      # 4️⃣ Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -44,19 +44,9 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      # 5️⃣ Préparer le dossier minimal pour déploiement
-      - name: Prepare deployment folder
-        run: |
-          mkdir deploy
-          cp -r ./frontend/package.json ./frontend/package-lock.json deploy/
-          cp -r ./frontend/app deploy/       # ou ./frontend/pages si tu utilises pages/
-          cp -r ./frontend/public deploy/
-          [ -f ./frontend/next.config.js ] && cp ./frontend/next.config.js deploy/ || echo "No next.config.js, skipping"
-          zip -r deploy.zip deploy
-
-      # 6️⃣ Déploiement sur Azure Web App
+      # 5️⃣ Deploy directement le dossier
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Inventory-pro-front'
-          package: ./deploy.zip
+          package: ./frontend   # <-- déploie le projet complet
