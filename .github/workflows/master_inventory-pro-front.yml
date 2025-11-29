@@ -11,30 +11,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
+      # 3️⃣ Install dependencies and build Next.js
       - name: Install dependencies and build
         working-directory: ./frontend
         run: |
           npm install
           npm run build
 
+      # 4️⃣ Prepare minimal deployment zip
       - name: Prepare deploy zip
         working-directory: ./frontend
         run: |
           mkdir deploy
           cp package.json package-lock.json deploy/
-          cp -r app deploy/         # ou pages/
+          cp -r app deploy/          # ou pages/ si tu utilises Pages Router
           cp -r public deploy/
           [ -f next.config.js ] && cp next.config.js deploy/ || echo "No next.config.js"
           zip -r deploy.zip deploy
 
+      # 5️⃣ Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -46,14 +51,9 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
+      # 6️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Inventory-pro-front'
-          package: ./frontend-deploy/frontend.zip
-
-
-
-
-
-          
+          package: ./frontend/deploy.zip
