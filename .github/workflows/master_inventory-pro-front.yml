@@ -46,9 +46,14 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      - name: Deploy via Azure CLI
-        run: |
-          az webapp deployment source config-zip \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --name Inventory-pro-front \
-            --src ./frontend/deploy.zip
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'Inventory-pro-front'
+          package: ./frontend-deploy/frontend.zip
+
+
+
+
+
+          
