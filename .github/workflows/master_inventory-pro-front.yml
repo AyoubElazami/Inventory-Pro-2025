@@ -1,4 +1,4 @@
-name: Build and deploy Frontend Next.js app to Azure Web App - Inventory-pro-front
+name: Deploy Next.js SSR to Azure Web App
 
 on:
   push:
@@ -7,66 +7,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
-      # 1️⃣ Checkout repository
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
-      # 3️⃣ Install dependencies
-      - name: Install dependencies
+      - name: Install dependencies and build
         working-directory: ./frontend
-        run: npm install
+        run: |
+          npm install
+          npm run build
 
-      # 4️⃣ Build Next.js
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      # 5️⃣ Prepare minimal deployment folder (pas de .next)
-      - name: Prepare deployment folder
+      - name: Prepare deploy zip
         working-directory: ./frontend
         run: |
           mkdir deploy
           cp package.json package-lock.json deploy/
-          cp -r app deploy/          # ou ./pages si tu utilises Pages Router
+          cp -r app deploy/         # ou pages/
           cp -r public deploy/
           [ -f next.config.js ] && cp next.config.js deploy/ || echo "No next.config.js"
-          zip -r frontend.zip deploy
+          zip -r deploy.zip deploy
 
-      # 6️⃣ Upload artifact
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-package
-          path: ./frontend/frontend.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      # 7️⃣ Download artifact
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-package
-          path: ./frontend-deploy
-
-      # 8️⃣ Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -78,9 +46,9 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      # 9️⃣ Deploy to Azure Web App
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'Inventory-pro-front'
-          package: ./frontend-deploy/frontend.zip
+      - name: Deploy via Azure CLI
+        run: |
+          az webapp deployment source config-zip \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name Inventory-pro-front \
+            --src ./frontend/deploy.zip
