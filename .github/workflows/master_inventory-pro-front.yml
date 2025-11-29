@@ -1,4 +1,4 @@
-name: Build and Deploy Frontend Next.js to Azure Web App - Inventory-pro-front
+name: Build and deploy Frontend Next.js app to Azure Web App - Inventory-pro-front
 
 on:
   push:
@@ -13,17 +13,17 @@ jobs:
       contents: read
 
     steps:
-      # 1️⃣ Checkout du code
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Installer Node.js
+      # 2️⃣ Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
-      # 3️⃣ Installer les dépendances
+      # 3️⃣ Install dependencies
       - name: Install dependencies
         working-directory: ./frontend
         run: npm install
@@ -33,7 +33,7 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      # 5️⃣ Préparer le dossier minimal pour le déploiement
+      # 5️⃣ Prepare minimal deployment folder (pas de .next)
       - name: Prepare deployment folder
         working-directory: ./frontend
         run: |
@@ -41,10 +41,10 @@ jobs:
           cp package.json package-lock.json deploy/
           cp -r app deploy/          # ou ./pages si tu utilises Pages Router
           cp -r public deploy/
-          [ -f next.config.js ] && cp next.config.js deploy/ || echo "No next.config.js, skipping"
+          [ -f next.config.js ] && cp next.config.js deploy/ || echo "No next.config.js"
           zip -r frontend.zip deploy
 
-      # 6️⃣ Upload artifact pour le déploiement
+      # 6️⃣ Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -59,14 +59,14 @@ jobs:
       contents: read
 
     steps:
-      # 7️⃣ Télécharger l’artifact
+      # 7️⃣ Download artifact
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-package
           path: ./frontend-deploy
 
-      # 8️⃣ Login Azure
+      # 8️⃣ Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -78,7 +78,7 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      # 9️⃣ Déploiement via ZIP Deploy
+      # 9️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
