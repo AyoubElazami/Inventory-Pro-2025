@@ -15,20 +15,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Récupérer le code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Installer Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
-      - name: Build Next.js
+      # 3️⃣ Installer dépendances et builder
+      - name: Install dependencies and build
         working-directory: ./frontend
         run: |
           npm install
           npm run build
 
+      # 4️⃣ Connexion à Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -40,19 +44,19 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      - name: Deploy minimal folder to Azure Web App
+      # 5️⃣ Préparer le dossier minimal pour déploiement
+      - name: Prepare deployment folder
         run: |
-          # Crée un dossier temporaire pour le déploiement
           mkdir deploy
-          cp -r ./frontend/package.json ./frontend/package-lock.json ./frontend/next.config.js deploy/
-          cp -r ./frontend/app deploy/  # ou pages si tu utilises pages/
+          cp -r ./frontend/package.json ./frontend/package-lock.json deploy/
+          cp -r ./frontend/app deploy/       # ou ./frontend/pages si tu utilises pages/
           cp -r ./frontend/public deploy/
+          [ -f ./frontend/next.config.js ] && cp ./frontend/next.config.js deploy/ || echo "No next.config.js, skipping"
+          zip -r deploy.zip deploy
 
-          # Déployer avec Azure CLI
-          az webapp deployment source config-zip \
-            --resource-group <NomDeTonResourceGroup> \
-            --name Inventory-pro-front \
-            --src deploy.zip
-
-      - name: Zip deployment package
-        run: zip -r deploy.zip deploy
+      # 6️⃣ Déploiement sur Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'Inventory-pro-front'
+          package: ./deploy.zip
