@@ -15,20 +15,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout du code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Installer Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
+      # 3️⃣ Installer les dépendances et builder
       - name: Install dependencies and build
         working-directory: ./frontend
         run: |
           npm install
           npm run build
 
+      # 4️⃣ Connexion à Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -40,12 +44,13 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
+      # 5️⃣ Déploiement direct avec Azure CLI
       - name: Deploy project via Azure CLI
         run: |
           az webapp up \
             --name Inventory-pro-front \
-            --resource-group <NomDeTonResourceGroup> \
+            --resource-group <RESOURCE_GROUP> \
             --location switzerlandnorth \
             --sku F1 \
-            --plan <NomDeTonAppServicePlan> \
+            --plan <APP_SERVICE_PLAN> \
             --src-path ./frontend
