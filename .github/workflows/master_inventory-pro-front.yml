@@ -57,6 +57,7 @@ jobs:
           [ -f server.js ] && cp server.js deploy/
           [ -f web.config ] && cp web.config deploy/
           [ -f .deployment ] && cp .deployment deploy/
+          [ -f startup.sh ] && cp startup.sh deploy/ && chmod +x deploy/startup.sh
           
           # Vérifier que le build .next existe
           if [ ! -d ".next" ]; then
@@ -70,11 +71,38 @@ jobs:
             exit 1
           fi
           
+          # Vérifier que package.json existe et contient le bon script start
+          if [ -f "package.json" ]; then
+            echo "📄 Contenu de package.json (scripts):"
+            grep -A 5 '"scripts"' package.json
+          fi
+          
           # Lister le contenu pour vérification
           echo "📦 Contenu du package de déploiement:"
           ls -la deploy/
-          echo "📁 Contenu du dossier .next:"
-          ls -la deploy/.next/ | head -20
+          echo "📁 Vérification du dossier .next:"
+          if [ -d "deploy/.next" ]; then
+            echo "✅ .next existe dans deploy/"
+            ls -la deploy/.next/ | head -10
+          else
+            echo "❌ .next n'existe PAS dans deploy/"
+          fi
+          
+          # Vérifier que server.js est bien copié
+          if [ -f "deploy/server.js" ]; then
+            echo "✅ server.js copié dans deploy/"
+          else
+            echo "❌ server.js n'existe PAS dans deploy/"
+          fi
+          
+          # Vérifier package.json dans deploy
+          if [ -f "deploy/package.json" ]; then
+            echo "✅ package.json copié dans deploy/"
+            echo "📄 Script start dans deploy/package.json:"
+            grep '"start"' deploy/package.json
+          else
+            echo "❌ package.json n'existe PAS dans deploy/"
+          fi
           
           # Créer le zip (sans node_modules - Azure les installera)
           cd deploy
@@ -133,4 +161,5 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_FRONT_APP_NAME || 'inventory-pro-01' }}
           package: ./deploy-package/extracted
-          startup-command: 'npm start'
+          startup-command: 'node server.js'
+          configuration-file: ''
