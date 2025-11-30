@@ -64,6 +64,18 @@ jobs:
             exit 1
           fi
           
+          # Vérifier que server.js existe
+          if [ ! -f "server.js" ]; then
+            echo "❌ Erreur: server.js n'existe pas."
+            exit 1
+          fi
+          
+          # Lister le contenu pour vérification
+          echo "📦 Contenu du package de déploiement:"
+          ls -la deploy/
+          echo "📁 Contenu du dossier .next:"
+          ls -la deploy/.next/ | head -20
+          
           # Créer le zip (sans node_modules - Azure les installera)
           cd deploy
           zip -r ../deploy.zip . -q
