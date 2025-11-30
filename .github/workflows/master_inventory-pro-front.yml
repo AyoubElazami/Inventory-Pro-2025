@@ -119,6 +119,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: '${{ secrets.AZURE_FRONT_APP_NAME || "inventory-pro-01" }}'
+          app-name: ${{ secrets.AZURE_FRONT_APP_NAME || 'inventory-pro-01' }}
           package: ./deploy-package/extracted
           startup-command: 'npm start'
