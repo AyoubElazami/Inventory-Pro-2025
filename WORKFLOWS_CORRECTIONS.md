@@ -4,7 +4,7 @@
 
 ### Frontend Workflow (`master_inventory-pro-front.yml`)
 
-1. **Installation des dépendances de production** : Le workflow installe maintenant toutes les dépendances nécessaires avant le build
+1. **Installation des dépendances de production** : Le workflow installe maintenant toutes les dépendances nécessaires avant le build.
 2. **Vérification du build** : Ajout d'une vérification pour s'assurer que le dossier `.next` existe après le build
 3. **Copie du dossier `lib`** : Le dossier `lib` contenant `api.ts` est maintenant inclus dans le package
 4. **Configuration `.deployment`** : 
