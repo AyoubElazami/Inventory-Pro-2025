@@ -102,6 +102,37 @@ jobs:
               "tenantId": "${{ secrets.AZURE_BACK_TENANTID }}"
             }
 
+      - name: Verify App Service exists
+        run: |
+          APP_NAME="${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro1' }}"
+          RESOURCE_GROUP="${{ secrets.AZURE_BACK_RESOURCE_GROUP || 'Inventoryy22' }}"
+          
+          echo "Vérification de l'App Service: $APP_NAME dans le groupe $RESOURCE_GROUP"
+          
+          # Vérifier que l'App Service existe
+          APP_EXISTS=$(az webapp show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --query "name" \
+            -o tsv 2>/dev/null || echo "")
+          
+          if [ -z "$APP_EXISTS" ]; then
+            echo "❌ Erreur: L'App Service '$APP_NAME' n'existe pas dans le groupe de ressources '$RESOURCE_GROUP'"
+            echo "Vérifiez le nom de l'App Service dans Azure Portal ou créez-le avec:"
+            echo "  az webapp create --resource-group $RESOURCE_GROUP --plan ProjetStock-Plan --name $APP_NAME --runtime 'NODE:20-lts'"
+            exit 1
+          fi
+          
+          echo "✅ App Service trouvé: $APP_EXISTS"
+          
+          # Afficher les informations de l'App Service
+          echo "📋 Informations de l'App Service:"
+          az webapp show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --query "{Name:name, State:state, Location:location, Runtime:siteConfig.linuxFxVersion}" \
+            -o table
+
       - name: Verify deployment package
         run: |
           echo "📦 Vérification du package de déploiement:"
@@ -128,20 +159,41 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro1' }}
           package: ./deploy-package
+          slot-name: 'production'
+          type: zip
           
-      - name: Configure startup command via Azure CLI
+      - name: Configure startup command and settings via Azure CLI
         run: |
           APP_NAME="${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro1' }}"
           RESOURCE_GROUP="${{ secrets.AZURE_BACK_RESOURCE_GROUP || 'Inventoryy22' }}"
           
           echo "Configuration de la commande de démarrage pour $APP_NAME dans le groupe $RESOURCE_GROUP"
+          
+          # Configurer la commande de démarrage
           az webapp config set \
             --resource-group "$RESOURCE_GROUP" \
             --name "$APP_NAME" \
             --startup-file "npm start" \
             --output none
           
-          echo "✅ Commande de démarrage configurée avec succès"
+          echo "✅ Commande de démarrage configurée"
+          
+          # Vérifier la configuration
+          echo "📋 Configuration actuelle:"
+          az webapp config show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --query "{StartupFile:linuxFxVersion, AlwaysOn:alwaysOn}" \
+            -o table
+          
+          # Redémarrer l'application pour appliquer les changements
+          echo "🔄 Redémarrage de l'application..."
+          az webapp restart \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --output none
+          
+          echo "✅ Application redémarrée"
           
       - name: Verify deployment
         run: |
