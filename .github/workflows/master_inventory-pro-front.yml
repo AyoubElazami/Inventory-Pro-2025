@@ -44,7 +44,7 @@ jobs:
           cp -r .next deploy/.next
           cp -r public deploy/public
           cp -r app deploy/app
-          cp -r lib deploy/lib || true
+          [ -d lib ] && cp -r lib deploy/lib
           
           # Copier les fichiers de configuration
           [ -f next.config.ts ] && cp next.config.ts deploy/
@@ -58,12 +58,22 @@ jobs:
           [ -f web.config ] && cp web.config deploy/
           [ -f .deployment ] && cp .deployment deploy/
           
-          # Créer le zip
+          # Vérifier que le build .next existe
+          if [ ! -d ".next" ]; then
+            echo "❌ Erreur: Le dossier .next n'existe pas. Le build a peut-être échoué."
+            exit 1
+          fi
+          
+          # Créer le zip (sans node_modules - Azure les installera)
           cd deploy
-          zip -r ../deploy.zip .
+          zip -r ../deploy.zip . -q
           cd ..
+          
+          # Afficher la taille du package
+          ls -lh deploy.zip
+          echo "✅ Package créé avec succès"
 
-      # 5️⃣ Upload artifact
+      # 6️⃣ Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
