@@ -126,12 +126,12 @@ jobs:
       - name: Deploy to Azure Web App (Backend)
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}
+          app-name: ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro1' }}
           package: ./deploy-package
           
       - name: Configure startup command via Azure CLI
         run: |
-          APP_NAME="${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}"
+          APP_NAME="${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro1' }}"
           RESOURCE_GROUP="${{ secrets.AZURE_BACK_RESOURCE_GROUP || 'Inventoryy22' }}"
           
           echo "Configuration de la commande de démarrage pour $APP_NAME dans le groupe $RESOURCE_GROUP"
@@ -146,4 +146,4 @@ jobs:
       - name: Verify deployment
         run: |
           echo "✅ Déploiement terminé"
-          echo "URL de l'API: https://${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}.azurewebsites.net/api"
+          echo "URL de l'API: https://${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro1' }}.azurewebsites.net/api"
