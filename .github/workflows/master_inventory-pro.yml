@@ -128,7 +128,14 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}
           package: ./deploy-package
-          startup-command: 'npm start'
+          
+      - name: Configure startup command via Azure CLI
+        run: |
+          az webapp config set \
+            --resource-group ${{ secrets.AZURE_BACK_RESOURCE_GROUP || 'ProjetStock-RG' }} \
+            --name ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }} \
+            --startup-file "npm start" \
+            --output none
           
       - name: Verify deployment
         run: |
