@@ -75,5 +75,5 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: "Inventory-pro-front"
+          app-name: "inventory-pro-01"
           package: ./deploy-package/deploy.zip
