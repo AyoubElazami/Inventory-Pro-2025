@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import apiClient from '@/lib/api';
 
 interface Supplier {
   id: number;
@@ -15,8 +16,7 @@ export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/suppliers")
-      .then((res) => res.json())
+    apiClient.get("/api/suppliers")
       .then(setSuppliers)
       .catch((err) => console.error(err));
   }, []);

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import apiClient from '@/lib/api';
 
 export default function AddProduct() {
   const [form, setForm] = useState({ sku: '', name: '', price: 0, quantity: 0, supplierId: null });
@@ -9,11 +10,7 @@ export default function AddProduct() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    await fetch('http://localhost:4000/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
+    await apiClient.post('/api/products', form);
     router.push('/pages/products/index');
   }
 

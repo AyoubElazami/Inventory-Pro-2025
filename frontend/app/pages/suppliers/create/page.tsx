@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import apiClient from "@/lib/api";
 
 export default function CreateSupplier() {
   const router = useRouter();
@@ -10,11 +11,7 @@ export default function CreateSupplier() {
   const submit = async (e: any) => {
     e.preventDefault();
 
-    await fetch("http://localhost:4000/api/suppliers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    await apiClient.post("/api/suppliers", form);
 
     router.push("/pages/suppliers");
   };

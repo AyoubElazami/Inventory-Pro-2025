@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - main
   workflow_dispatch:
 
 jobs:
@@ -12,12 +13,16 @@ jobs:
 
     steps:
       # 1️⃣ Checkout du code
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       # 2️⃣ Installer Node.js
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "20.x"
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       # 3️⃣ Installer les dépendances et build
       - name: Install dependencies + Build
@@ -30,15 +35,33 @@ jobs:
       - name: Prepare deployment package
         working-directory: ./frontend
         run: |
+          # Créer le dossier de déploiement
           rm -rf deploy
-          mkdir deploy
+          mkdir -p deploy
+          
+          # Copier les fichiers essentiels
           cp package.json package-lock.json deploy/
           cp -r .next deploy/.next
           cp -r public deploy/public
-          cp -r app deploy/app || true
-          cp -r pages deploy/pages || true
+          cp -r app deploy/app
+          cp -r lib deploy/lib || true
+          
+          # Copier les fichiers de configuration
+          [ -f next.config.ts ] && cp next.config.ts deploy/
           [ -f next.config.js ] && cp next.config.js deploy/
-          zip -r deploy.zip deploy
+          [ -f tsconfig.json ] && cp tsconfig.json deploy/
+          [ -f postcss.config.mjs ] && cp postcss.config.mjs deploy/
+          [ -f eslint.config.mjs ] && cp eslint.config.mjs deploy/
+          
+          # Copier les fichiers nécessaires pour Azure
+          [ -f server.js ] && cp server.js deploy/
+          [ -f web.config ] && cp web.config deploy/
+          [ -f .deployment ] && cp .deployment deploy/
+          
+          # Créer le zip
+          cd deploy
+          zip -r ../deploy.zip .
+          cd ..
 
       # 5️⃣ Upload artifact
       - name: Upload artifact
@@ -46,10 +69,14 @@ jobs:
         with:
           name: frontend-app
           path: ./frontend/deploy.zip
+          retention-days: 1
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       # 1️⃣ Download artifact
@@ -59,7 +86,14 @@ jobs:
           name: frontend-app
           path: ./deploy-package
 
-      # 2️⃣ Azure login
+      # 2️⃣ Décompresser le package
+      - name: Extract deployment package
+        run: |
+          cd ./deploy-package
+          unzip -q deploy.zip -d extracted
+          ls -la extracted/
+
+      # 3️⃣ Azure login
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -71,9 +105,10 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      # 3️⃣ Deploy to Azure
+      # 4️⃣ Deploy to Azure
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: "inventory-pro-01"
-          package: ./deploy-package/deploy.zip
+          app-name: '${{ secrets.AZURE_FRONT_APP_NAME || "inventory-pro-01" }}'
+          package: ./deploy-package/extracted
+          startup-command: 'npm start'

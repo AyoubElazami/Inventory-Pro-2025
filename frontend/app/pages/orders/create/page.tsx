@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import apiClient from "@/lib/api";
 
 export default function CreateOrder() {
   const router = useRouter();
@@ -13,8 +14,7 @@ export default function CreateOrder() {
 
   // Load products
   useEffect(() => {
-    fetch("http://localhost:4000/api/products")
-      .then((res) => res.json())
+    apiClient.get("/api/products")
       .then(setProducts)
       .catch((err) => console.error(err));
   }, []);
@@ -24,14 +24,10 @@ export default function CreateOrder() {
   };
 
   const submit = async () => {
-    await fetch("http://localhost:4000/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customerName: customer.name,
-        customerEmail: customer.email,
-        items,
-      }),
+    await apiClient.post("/api/orders", {
+      customerName: customer.name,
+      customerEmail: customer.email,
+      items,
     });
 
     router.push("/pages/orders");

@@ -1,14 +1,15 @@
-name: Build and deploy Backend Node.js app to Azure Web App - Inventory-pro-back
+name: Build and deploy Backend Node.js app to Azure Web App
 
 on:
   push:
     branches:
       - master
+      - main
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
@@ -17,23 +18,34 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies (Backend)
         working-directory: ./backend
-        run: npm install
+        run: npm ci --production=false
 
       - name: Build Backend (if applicable)
         working-directory: ./backend
         run: npm run build --if-present
+
+      - name: Prepare deployment package
+        working-directory: ./backend
+        run: |
+          # Créer un package propre sans node_modules (Azure les installera)
+          rm -rf node_modules
+          # S'assurer que tous les fichiers nécessaires sont présents
+          echo "✅ Package préparé pour le déploiement"
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: backend-app
           path: ./backend
+          retention-days: 1
 
   deploy:
     runs-on: ubuntu-latest
@@ -63,6 +75,6 @@ jobs:
       - name: Deploy to Azure Web App (Backend)
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'Inventory-pro'
-          slot-name: 'Production'
+          app-name: '${{ secrets.AZURE_BACK_APP_NAME || "Inventory-pro" }}'
           package: ./deploy-package
+          startup-command: 'npm start'

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import apiClient from "@/lib/api";
 
 export default function ReportsPage() {
   const [products, setProducts] = useState([]);
@@ -9,16 +10,13 @@ export default function ReportsPage() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/products")
-      .then((res) => res.json())
+    apiClient.get("/api/products")
       .then(setProducts);
 
-    fetch("http://localhost:4000/api/suppliers")
-      .then((res) => res.json())
+    apiClient.get("/api/suppliers")
       .then(setSuppliers);
 
-    fetch("http://localhost:4000/api/orders")
-      .then((res) => res.json())
+    apiClient.get("/api/orders")
       .then(setOrders);
   }, []);
 

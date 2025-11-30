@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import apiClient from '@/lib/api';
 
 interface Product {
   id: number;
@@ -15,8 +16,7 @@ export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/products')
-      .then((res) => res.json())
+    apiClient.get('/api/products')
       .then(setProducts)
       .catch((err) => console.error(err));
   }, []);

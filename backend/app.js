@@ -11,7 +11,27 @@ const ordersRouter = require('./routes/orders');
 const reportsRouter = require('./routes/reports');
 
 const app = express();
-app.use(cors());
+
+// Configuration CORS pour Azure
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'https://projetstock-frontend.azurewebsites.net'
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Autoriser les requêtes sans origine (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(bodyParser.json());
 
 app.use('/api/products', productsRouter);
