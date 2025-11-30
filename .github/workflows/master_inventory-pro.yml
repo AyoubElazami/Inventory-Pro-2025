@@ -35,9 +35,39 @@ jobs:
       - name: Prepare deployment package
         working-directory: ./backend
         run: |
+          # Vérifier que les fichiers essentiels existent
+          if [ ! -f "package.json" ]; then
+            echo "❌ Erreur: package.json n'existe pas"
+            exit 1
+          fi
+          
+          if [ ! -f "server.js" ]; then
+            echo "❌ Erreur: server.js n'existe pas"
+            exit 1
+          fi
+          
+          if [ ! -f "app.js" ]; then
+            echo "❌ Erreur: app.js n'existe pas"
+            exit 1
+          fi
+          
+          # Vérifier que le script start est correct dans package.json
+          if ! grep -q '"start":' package.json; then
+            echo "❌ Erreur: script 'start' manquant dans package.json"
+            exit 1
+          fi
+          
           # Créer un package propre sans node_modules (Azure les installera)
           rm -rf node_modules
-          # S'assurer que tous les fichiers nécessaires sont présents
+          
+          # Lister les fichiers qui seront déployés
+          echo "📦 Fichiers à déployer:"
+          ls -la
+          
+          # Vérifier le contenu de package.json
+          echo "📄 Script start dans package.json:"
+          grep '"start"' package.json
+          
           echo "✅ Package préparé pour le déploiement"
 
       - name: Upload artifact for deployment
@@ -72,9 +102,35 @@ jobs:
               "tenantId": "${{ secrets.AZURE_BACK_TENANTID }}"
             }
 
+      - name: Verify deployment package
+        run: |
+          echo "📦 Vérification du package de déploiement:"
+          ls -la ./deploy-package/
+          echo ""
+          echo "📄 Contenu de package.json:"
+          cat ./deploy-package/package.json
+          echo ""
+          if [ -f "./deploy-package/server.js" ]; then
+            echo "✅ server.js présent"
+          else
+            echo "❌ server.js manquant"
+            exit 1
+          fi
+          if [ -f "./deploy-package/app.js" ]; then
+            echo "✅ app.js présent"
+          else
+            echo "❌ app.js manquant"
+            exit 1
+          fi
+
       - name: Deploy to Azure Web App (Backend)
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}
           package: ./deploy-package
           startup-command: 'npm start'
+          
+      - name: Verify deployment
+        run: |
+          echo "✅ Déploiement terminé"
+          echo "URL de l'API: https://${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}.azurewebsites.net/api"
