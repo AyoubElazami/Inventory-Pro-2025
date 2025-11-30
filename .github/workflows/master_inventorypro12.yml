@@ -11,22 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout du code
       - uses: actions/checkout@v4
 
-      # 2️⃣ Installer Node.js
       - uses: actions/setup-node@v4
         with:
           node-version: "22.x"
 
-      # 3️⃣ Installer les dépendances et build
       - name: Install dependencies + Build
         working-directory: ./frontend
         run: |
           npm ci
           npm run build
 
-      # 4️⃣ Azure login
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -38,10 +34,9 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      # 5️⃣ Déployer directement le frontend
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "inventoryPro12"
           package: ./frontend
-          scm-do-build-during-deployment: true
+          scm-do-build-during-deployment: false
