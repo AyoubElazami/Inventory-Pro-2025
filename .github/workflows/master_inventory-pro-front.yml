@@ -15,26 +15,28 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: "22.x"
 
-      - name: Install deps + build
+      - name: Install dependencies + build
         working-directory: ./frontend
         run: |
           npm ci
           npm run build
 
-      - name: Prepare deploy zip (SSR)
+      - name: Prepare deployment package
         working-directory: ./frontend
         run: |
           mkdir deploy
           cp package.json package-lock.json deploy/
           cp -r .next deploy/.next
           cp -r public deploy/public
-          cp -r app deploy/app || cp -r pages deploy/pages
+          cp -r app deploy/app || true
+          cp -r pages deploy/pages || true
           [ -f next.config.js ] && cp next.config.js deploy/
           zip -r deploy.zip deploy
 
-      - uses: azure/login@v2
+      - name: Azure Login
+        uses: azure/login@v2
         with:
           creds: |
             {
@@ -44,7 +46,8 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      - uses: azure/webapps-deploy@v3
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
         with:
-          app-name: 'Inventory-pro-front'
-          package: ./frontend/deploy.zip
+          app-name: "Inventory-pro-front"
+          package: "./frontend/deploy.zip"
