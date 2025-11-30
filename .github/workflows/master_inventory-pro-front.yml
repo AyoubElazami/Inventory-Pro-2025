@@ -73,7 +73,7 @@ jobs:
           ls -lh deploy.zip
           echo "✅ Package créé avec succès"
 
-      # 6️⃣ Upload artifact
+      # 5️⃣ Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
