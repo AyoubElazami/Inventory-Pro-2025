@@ -129,13 +129,33 @@ jobs:
           app-name: ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}
           package: ./deploy-package
           
+      - name: Get resource group from App Service
+        id: get-rg
+        run: |
+          APP_NAME="${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}"
+          RG=$(az webapp show --name "$APP_NAME" --query "resourceGroup" -o tsv)
+          echo "resourceGroup=$RG" >> $GITHUB_OUTPUT
+          echo "Resource group trouvé: $RG"
+          
       - name: Configure startup command via Azure CLI
         run: |
+          APP_NAME="${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }}"
+          RG="${{ steps.get-rg.outputs.resourceGroup }}"
+          
+          if [ -z "$RG" ]; then
+            echo "❌ Erreur: Impossible de trouver le groupe de ressources pour l'App Service: $APP_NAME"
+            echo "Vérifiez que l'App Service existe et que le nom est correct dans le secret AZURE_BACK_APP_NAME"
+            exit 1
+          fi
+          
+          echo "Configuration de la commande de démarrage pour $APP_NAME dans le groupe $RG"
           az webapp config set \
-            --resource-group ${{ secrets.AZURE_BACK_RESOURCE_GROUP || 'ProjetStock-RG' }} \
-            --name ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro' }} \
+            --resource-group "$RG" \
+            --name "$APP_NAME" \
             --startup-file "npm start" \
             --output none
+          
+          echo "✅ Commande de démarrage configurée avec succès"
           
       - name: Verify deployment
         run: |
