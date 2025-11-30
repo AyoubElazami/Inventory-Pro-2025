@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,40 +26,7 @@ jobs:
           npm ci
           npm run build
 
-      # 4️⃣ Préparer le package pour Azure
-      - name: Prepare deployment package
-        working-directory: ./frontend
-        run: |
-          rm -rf deploy
-          mkdir deploy
-          cp package.json package-lock.json deploy/
-          cp -r .next deploy/.next
-          cp -r public deploy/public
-          cp -r app deploy/app || true
-          cp -r pages deploy/pages || true
-          [ -f next.config.js ] && cp next.config.js deploy/
-          zip -r deploy.zip deploy
-
-      # 5️⃣ Upload artifact
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-app
-          path: ./frontend/deploy.zip
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      # 1️⃣ Download artifact
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-app
-          path: ./deploy-package
-
-      # 2️⃣ Azure login
+      # 4️⃣ Azure login
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -71,9 +38,10 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      # 3️⃣ Deploy to Azure
+      # 5️⃣ Déployer directement le frontend
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "inventory-pro-01"
-          package: ./deploy-package/deploy.zip
+          package: ./frontend
+          scm-do-build-during-deployment: true
