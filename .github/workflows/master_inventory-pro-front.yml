@@ -159,7 +159,7 @@ jobs:
       - name: Verify and start App Service
         run: |
           APP_NAME="${{ secrets.AZURE_FRONT_APP_NAME || 'inventory-pro-01' }}"
-          RESOURCE_GROUP="${{ secrets.AZURE_FRONT_RESOURCE_GROUP || 'Inventoryy22' }}"
+          RESOURCE_GROUP="${{ secrets.AZURE_FRONT_RESOURCE_GROUP || 'IInventory-Pro' }}"
           
           echo "Vérification de l'App Service: $APP_NAME dans le groupe $RESOURCE_GROUP"
           
@@ -234,7 +234,7 @@ jobs:
       - name: Configure startup command via Azure CLI
         run: |
           APP_NAME="${{ secrets.AZURE_FRONT_APP_NAME || 'inventory-pro-01' }}"
-          RESOURCE_GROUP="${{ secrets.AZURE_FRONT_RESOURCE_GROUP || 'Inventoryy22' }}"
+          RESOURCE_GROUP="${{ secrets.AZURE_FRONT_RESOURCE_GROUP || 'IInventory-Pro' }}"
           
           echo "Configuration de la commande de démarrage pour $APP_NAME"
           az webapp config set \
