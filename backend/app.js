@@ -32,6 +32,11 @@ app.use(cors({
   credentials: true
 }));
 
+app.get('/', (_req, res) => {
+  res.send('✅ Backend Node.js fonctionne sur Azure !');
+});
+
+
 app.use(bodyParser.json());
 
 app.use('/api/products', productsRouter);
