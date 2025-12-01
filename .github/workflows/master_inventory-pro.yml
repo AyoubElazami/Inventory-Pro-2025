@@ -132,6 +132,42 @@ jobs:
             --name "$APP_NAME" \
             --query "{Name:name, State:state, Location:location, Runtime:siteConfig.linuxFxVersion}" \
             -o table
+          
+          # Vérifier et démarrer l'App Service si nécessaire
+          APP_STATE=$(az webapp show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --query "state" \
+            -o tsv)
+          
+          echo "État actuel de l'App Service: $APP_STATE"
+          
+          if [ "$APP_STATE" != "Running" ]; then
+            echo "⚠️  L'App Service n'est pas en cours d'exécution. Démarrage..."
+            az webapp start \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$APP_NAME"
+            
+            # Attendre que l'App Service soit démarré
+            echo "⏳ Attente du démarrage de l'App Service..."
+            sleep 10
+            
+            # Vérifier à nouveau
+            APP_STATE=$(az webapp show \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$APP_NAME" \
+              --query "state" \
+              -o tsv)
+            
+            if [ "$APP_STATE" = "Running" ]; then
+              echo "✅ App Service démarré avec succès"
+            else
+              echo "❌ Erreur: Impossible de démarrer l'App Service. État: $APP_STATE"
+              exit 1
+            fi
+          else
+            echo "✅ App Service est déjà en cours d'exécution"
+          fi
 
       - name: Verify deployment package
         run: |
