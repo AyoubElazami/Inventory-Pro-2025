@@ -6,7 +6,7 @@ Ce guide vous explique comment configurer les workflows GitHub Actions pour dép
 
 1. Un compte Azure avec un abonnement actif
 2. Un repository GitHub avec votre code
-3. Les App Services créés dans Azure (backend et frontend)
+3. Les App Services créés dans Azure (backend et frontend) _
 
 ## 🔐 Configuration des Secrets GitHub
 
