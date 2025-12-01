@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-
+      - main
   workflow_dispatch:
 
 jobs:
@@ -155,11 +155,101 @@ jobs:
               "tenantId": "${{ secrets.AZURE_FRONT_TENANTID }}"
             }
 
-      # 4️⃣ Deploy to Azure
+      # 3.5️⃣ Vérifier et démarrer l'App Service
+      - name: Verify and start App Service
+        run: |
+          APP_NAME="${{ secrets.AZURE_FRONT_APP_NAME || 'inventory-pro-01' }}"
+          RESOURCE_GROUP="${{ secrets.AZURE_FRONT_RESOURCE_GROUP || 'Inventoryy22' }}"
+          
+          echo "Vérification de l'App Service: $APP_NAME dans le groupe $RESOURCE_GROUP"
+          
+          # Vérifier que l'App Service existe
+          APP_EXISTS=$(az webapp show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --query "name" \
+            -o tsv 2>/dev/null || echo "")
+          
+          if [ -z "$APP_EXISTS" ]; then
+            echo "❌ Erreur: L'App Service '$APP_NAME' n'existe pas dans le groupe de ressources '$RESOURCE_GROUP'"
+            exit 1
+          fi
+          
+          echo "✅ App Service trouvé: $APP_EXISTS"
+          
+          # Vérifier et démarrer l'App Service si nécessaire
+          APP_STATE=$(az webapp show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --query "state" \
+            -o tsv)
+          
+          echo "État actuel de l'App Service: $APP_STATE"
+          
+          if [ "$APP_STATE" != "Running" ]; then
+            echo "⚠️  L'App Service n'est pas en cours d'exécution. Démarrage..."
+            az webapp start \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$APP_NAME"
+            
+            # Attendre que l'App Service soit démarré
+            echo "⏳ Attente du démarrage de l'App Service..."
+            sleep 10
+            
+            # Vérifier à nouveau
+            APP_STATE=$(az webapp show \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$APP_NAME" \
+              --query "state" \
+              -o tsv)
+            
+            if [ "$APP_STATE" = "Running" ]; then
+              echo "✅ App Service démarré avec succès"
+            else
+              echo "❌ Erreur: Impossible de démarrer l'App Service. État: $APP_STATE"
+              exit 1
+            fi
+          else
+            echo "✅ App Service est déjà en cours d'exécution"
+          fi
+
+      # 4️⃣ Créer le ZIP final pour le déploiement
+      - name: Create final deployment zip
+        run: |
+          cd ./deploy-package/extracted
+          zip -r ../../frontend-deploy.zip . -q
+          cd ../..
+          ls -lh frontend-deploy.zip
+          echo "✅ Package ZIP final créé"
+
+      # 5️⃣ Deploy to Azure
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_FRONT_APP_NAME || 'inventory-pro-01' }}
-          package: ./deploy-package/extracted
-          startup-command: 'node server.js'
-          configuration-file: ''
+          package: ./frontend-deploy.zip
+          type: zip
+          
+      # 6️⃣ Configurer la commande de démarrage via Azure CLI
+      - name: Configure startup command via Azure CLI
+        run: |
+          APP_NAME="${{ secrets.AZURE_FRONT_APP_NAME || 'inventory-pro-01' }}"
+          RESOURCE_GROUP="${{ secrets.AZURE_FRONT_RESOURCE_GROUP || 'Inventoryy22' }}"
+          
+          echo "Configuration de la commande de démarrage pour $APP_NAME"
+          az webapp config set \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --startup-file "node server.js" \
+            --output none
+          
+          echo "✅ Commande de démarrage configurée"
+          
+          # Redémarrer l'application pour appliquer les changements
+          echo "🔄 Redémarrage de l'application..."
+          az webapp restart \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$APP_NAME" \
+            --output none
+          
+          echo "✅ Application redémarrée"
