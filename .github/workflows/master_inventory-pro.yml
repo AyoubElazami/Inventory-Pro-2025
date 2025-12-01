@@ -154,12 +154,20 @@ jobs:
             exit 1
           fi
 
+      - name: Create deployment zip package
+        run: |
+          echo "📦 Création du package ZIP pour le déploiement..."
+          cd ./deploy-package
+          zip -r ../backend-deploy.zip . -q
+          cd ..
+          ls -lh backend-deploy.zip
+          echo "✅ Package ZIP créé"
+
       - name: Deploy to Azure Web App (Backend)
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_BACK_APP_NAME || 'Inventory-pro1' }}
-          package: ./deploy-package
-          slot-name: 'production'
+          package: ./backend-deploy.zip
           type: zip
           
       - name: Configure startup command and settings via Azure CLI
